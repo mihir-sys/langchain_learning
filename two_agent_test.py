@@ -1,21 +1,23 @@
-from dotenv import load_dotenv
-import os
 import json
+import os
 import re
 import time
 from datetime import datetime
-from google import genai
 
+from dotenv import load_dotenv
+from google import genai
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import SystemMessage, HumanMessage
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 MODEL = "gemini-2.5-flash"
 
+
 # ---------- Debug Logger ----------
 def log(step: str, message: str):
     print(f"[{datetime.now().strftime('%H:%M:%S')}] [{step}] {message}")
+
 
 # ---------- LLM Builder ----------
 def build_llm(temp: float):
@@ -26,6 +28,7 @@ def build_llm(temp: float):
         temperature=temp,
     )
 
+
 # ---------- Answer Agent ----------
 def answer_agent(question: str) -> str:
     log("ANSWER_AGENT", "Started")
@@ -34,7 +37,9 @@ def answer_agent(question: str) -> str:
     llm = build_llm(0.7)
 
     messages = [
-        SystemMessage(content="You are AnswerAgent. Provide a clear and accurate answer."),
+        SystemMessage(
+            content="You are AnswerAgent. Provide a clear and accurate answer."
+        ),
         HumanMessage(content=question),
     ]
 
@@ -46,6 +51,7 @@ def answer_agent(question: str) -> str:
 
     return response.content
 
+
 # ---------- Validator Agent ----------
 def validator_agent(question: str, answer: str) -> dict:
     log("VALIDATOR_AGENT", "Started")
@@ -54,13 +60,15 @@ def validator_agent(question: str, answer: str) -> dict:
     llm = build_llm(0.2)
 
     messages = [
-        SystemMessage(content=(
-            "You are ValidatorAgent.\n"
-            "Check the answer for correctness and hallucinations.\n"
-            "Return STRICT JSON:\n"
-            "{ verdict: APPROVE|REVISE, issues: [], revised_answer: '', confidence: 0-1 }"
-        )),
-        HumanMessage(content=f"Question:\n{question}\n\nAnswer:\n{answer}")
+        SystemMessage(
+            content=(
+                "You are ValidatorAgent.\n"
+                "Check the answer for correctness and hallucinations.\n"
+                "Return STRICT JSON:\n"
+                "{ verdict: APPROVE|REVISE, issues: [], revised_answer: '', confidence: 0-1 }"
+            )
+        ),
+        HumanMessage(content=f"Question:\n{question}\n\nAnswer:\n{answer}"),
     ]
 
     response = llm.invoke(messages)
@@ -78,10 +86,11 @@ def validator_agent(question: str, answer: str) -> dict:
             "issues": ["Validator output not valid JSON"],
             "revised_answer": "",
             "confidence": 0.3,
-            "raw": response.content
+            "raw": response.content,
         }
 
     return json.loads(match.group(0))
+
 
 # ---------- Main Execution ----------
 def run(question: str):
@@ -110,9 +119,6 @@ def run(question: str):
 if __name__ == "__main__":
     text = "What are the 7 wonders of the world?"
     run(text)
-    resp = client.models.count_tokens(
-    model=MODEL,
-    contents=text
-    )
+    resp = client.models.count_tokens(model=MODEL, contents=text)
 
     print("Token count:", resp.total_tokens)

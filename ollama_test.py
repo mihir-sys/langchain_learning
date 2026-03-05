@@ -37,7 +37,9 @@ def main():
     response = chain.invoke({"information": information})
     print("\n--- Model Output ---")
     print(response)
-#to run python
+
+
+# to run python
 # uv run python main.py
 if __name__ == "__main__":
     main()

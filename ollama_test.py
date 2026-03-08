@@ -5,7 +5,7 @@ from langchain_ollama import ChatOllama
 
 
 def main():
-    information = "List the New 7 Wonders of the World (official 2020 list)"
+    information = "List the 7 Wonders of the World in english (official 2020 list)"
 
     summary_template = """Instruction: {information}
 
